@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Latihan - Pereaksi pembatas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Halaman Awal */
+        #layar-awal { text-align: center; margin-top: 100px; }
+        input[type="text"] {
+            padding: 10px; font-size: 18px; width: 80%; max-width: 400px;
+            margin: 20px 0; border: 2px solid #000; text-align: center;
+        }
+        .btn-utama {
+            padding: 12px 30px; font-size: 18px; cursor: pointer;
+            background-color: #000; color: #fff; border: none; font-weight: bold;
+        }
+
+        /* Tampilan Kuis Utama */
+        #layar-kuis, #layar-penutup { display: none; }
+
+        /* Panel Atas: Navigasi & Timer */
+        .panel-atas {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #eee;
+            flex-wrap: wrap; gap: 15px;
+        }
+        
+        #timer-teks { font-size: 22px; font-weight: bold; color: #d9534f; }
+
+        .nav-soal-container {
+            display: flex; flex-wrap: wrap; gap: 8px; max-width: 60%;
+        }
+        .btn-nav-soal {
+            width: 35px; height: 35px; font-size: 14px; font-weight: bold; cursor: pointer;
+            border: 2px solid #ccc; background-color: #f4f4f4; color: #333;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .btn-nav-soal.dijawab { background-color: #28a745; color: white; border-color: #1e7e34; }
+        .btn-nav-soal.aktif { border: 3px solid #000; transform: scale(1.1); }
+
+        /* Area Soal */
+        #soal-judul { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+        #soal-teks { font-size: 18px; margin-bottom: 30px; line-height: 1.6; }
+
+        /* Kotak Jawaban */
+        .grid-jawaban { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .kotak-jawaban {
+            padding: 20px 10px; font-size: 18px; font-weight: bold; cursor: pointer;
+            border: 2px solid #000; display: flex; align-items: center; justify-content: center;
+            min-height: 80px; text-align: center; user-select: none; transition: 0.2s;
+        }
+        /* State saat opsi dipilih */
+        .kotak-jawaban.terpilih {
+            outline: 5px solid #000; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); transform: scale(0.96);
+        }
+
+        .warna-merah { background-color: #ff4d4d; color: white; }
+        .warna-kuning { background-color: #ffd700; color: black; }
+        .warna-hijau { background-color: #28a745; color: white; }
+        .warna-biru { background-color: #007bff; color: white; }
+
+        /* Tombol Bawah */
+        .panel-bawah {
+            display: flex; justify-content: space-between; margin-top: 30px; flex-wrap: wrap; gap: 10px;
+        }
+        .btn-navigasi {
+            padding: 10px 20px; font-size: 16px; cursor: pointer;
+            background-color: #eee; border: 2px solid #ccc; font-weight: bold;
+        }
+        .btn-selesai {
+            padding: 10px 20px; font-size: 16px; cursor: pointer;
+            background-color: #28a745; color: white; border: 2px solid #1e7e34; font-weight: bold;
+            width: 100%; margin-top: 15px;
+        }
+
+        /* Modal Konfirmasi */
+        .overlay-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 100;
+        }
+        .kotak-modal {
+            background: white; padding: 30px; border-radius: 8px; text-align: center; max-width: 400px;
+        }
+        .kotak-modal h3 { margin-top: 0; }
+        .grup-tombol-modal { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
+        .btn-batal { padding: 10px 15px; background: #6c757d; color: white; border: none; cursor: pointer; font-weight: bold; }
+        .btn-yakin { padding: 10px 15px; background: #28a745; color: white; border: none; cursor: pointer; font-weight: bold; }
+
+        /* Halaman Penutup & Sertifikat */
+        #layar-penutup { text-align: center; margin-top: 50px; }
+        .kotak-bukti {
+            border: 3px dashed #000; padding: 20px; margin-top: 20px; background-color: #f9f9f9; display: none;
+        }
+        .teks-token { font-size: 36px; letter-spacing: 5px; color: #d9534f; margin: 10px 0; font-family: monospace; font-weight: bold; }
+        .pesan-screenshot { font-size: 16px; font-weight: bold; color: #007bff; margin-top: 15px; display: none; }
+        
+        /* Pesan Lanjutan (Resume) */
+        #pesan-resume { color: #28a745; font-weight: bold; margin-top: 10px; display: none; }
+
+        /* Mobile responsif */
+        @media (max-width: 600px) {
+            .grid-jawaban { grid-template-columns: 1fr; }
+            .panel-atas { flex-direction: column-reverse; align-items: center; }
+            .nav-soal-container { max-width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="layar-awal">
+            <h2>Latihan: Pereaksi pembatas</h2>
+            <p>Waktu Pengerjaan: 20 Menit (5 Soal)</p>
+            <input type="text" id="input-nama" placeholder="Tulis Nama_Kelas" autocomplete="off">
+            <br>
+            <button class="btn-utama" onclick="mulaiKuis()">Mulai Latihan</button>
+            <p id="pesan-resume">Latihan sebelumnya ditemukan. Melanjutkan...</p>
+        </div>
+
+        <div id="layar-kuis">
+            <div class="panel-atas">
+                <div class="nav-soal-container" id="wadah-navigasi"></div>
+                <div id="timer-teks">Sisa Waktu: <span id="timer-angka">20:00</span></div>
+            </div>
+
+            <div id="soal-judul">Soal 1</div>
+            <div id="soal-teks">Teks soal akan muncul di sini...</div>
+            <div class="grid-jawaban" id="wadah-jawaban"></div>
+
+            <div class="panel-bawah">
+                <button class="btn-navigasi" id="btn-prev" onclick="navigasiSoal(-1)">&#9664; Sebelumnya</button>
+                <button class="btn-navigasi" id="btn-next" onclick="navigasiSoal(1)">Selanjutnya &#9654;</button>
+            </div>
+            <button class="btn-selesai" onclick="bukaModalKonfirmasi()">Selesaikan Latihan</button>
+        </div>
+
+        <div class="overlay-modal" id="modal-konfirmasi">
+            <div class="kotak-modal">
+                <h3>Apakah anda yakin untuk menyelesaikan latihan?</h3>
+                <p>Pastikan cek kembali jawaban anda. Data akan dikirim dan tidak dapat diubah lagi.</p>
+                <div class="grup-tombol-modal">
+                    <button class="btn-batal" onclick="tutupModal()">Tidak, Kembali ke latihan</button>
+                    <button class="btn-yakin" onclick="prosesSelesai()">Iya, Selesaikan Latihan</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="layar-penutup">
+            <h2 id="teks-status-akhir">Mengirim Data...</h2>
+            <p id="teks-skor" style="font-size: 54px; font-weight: bold; display: none; margin: 10px 0;">0%</p>
+            <p id="teks-info-tambahan"></p>
+
+            <div id="wadah-bukti" class="kotak-bukti">
+                <p style="margin: 0; font-weight: bold; font-size: 18px;">BUKTI PENYELESAIAN</p>
+                <div id="teks-token-tampil" class="teks-token">-----</div>
+                <p style="font-size: 14px; margin: 5px 0;">Nama: <strong id="tampil-nama-siswa">-</strong></p>
+                <p style="font-size: 14px; margin: 5px 0;">Waktu Selesai: <span id="tampil-timestamp">-</span></p>
+            </div>
+            
+            <p id="pesan-screenshot" class="pesan-screenshot">📸 Silakan screenshot halaman ini dan serahkan kepada guru!</p>
+        </div>
+    </div>
+
+    <script>
+        // URL Web App GAS baru Anda
+        const urlGAS = "https://script.google.com/macros/s/AKfycbxFd2CkPfFtPe1iAA5jG7FEKpgOu7PwgxWZwXBA0V3Ast7v_SjIA2KxwgG5Y8xjUJ5n/exec"; 
+        
+        const DURASI_KUIS = 20 * 60; // 20 Menit dalam detik
+        const KUNCI_STORAGE = "kuis_pereaksipembatas_save";
+
+        const dataSoal = [
+            { teks: "Seorang apoteker sedang menganalisis sampel obat maag (antasida) seberat 200 gram di laboratorium. Dari hasil pemisahan zat, diketahui bahwa di dalam sampel obat tersebut murni terdapat 80 gram kalsium. Berapakah komposisi zat kalsium dalam persen massa pada obat maag tersebut?", pilihan: [{t: "20%", b: false}, {t: "30%", b: false}, {t: "40%", b: true}, {t: "80%", b: false}] },
+            { teks: "Gas metana (CH₄) adalah komponen utama dalam biogas yang sering dimanfaatkan sebagai bahan bakar ramah lingkungan pengganti gas elpiji. Seorang siswa ingin mengetahui takaran unsur pembentuk gas ini. Berapakah persen massa teoritis unsur Hidrogen (H) di dalam senyawa gas metana tersebut? (Ar C = 12, H = 1)", pilihan: [{t: "10%", b: false}, {t: "25%", b: true}, {t: "50%", b: false}, {t: "75%", b: false}] },
+            { teks: "Dalam percobaan pembuatan gas amonia (NH₃) sebagai dasar pupuk, seorang laboran mencampurkan 2 mol gas nitrogen (N₂) dengan 3 mol gas hidrogen (H₂) di dalam tabung reaksi tertutup. Persamaan reaksinya sudah setara: N₂(g) + 3H₂(g) → 2NH₃(g). Dari percobaan ini, zat manakah yang bertindak sebagai pereaksi pembatas?", pilihan: [{t: "Gas N₂", b: false}, {t: "Gas H₂", b: true}, {t: "Gas NH₃", b: false}, {t: "Tidak ada, keduanya habis bereaksi", b: false}] },
+            { teks: "Pita logam magnesium (Mg) dibakar dengan gas oksigen (O₂) menghasilkan serbuk putih magnesium oksida (MgO) dengan persamaan reaksi: 2Mg(s) + O₂(g) → 2MgO(s). Jika disiapkan 4 mol Mg dan direaksikan dengan 1 mol O₂, berapakah jumlah mol MgO yang maksimal dapat terbentuk?", pilihan: [{t: "1 mol", b: false}, {t: "2 mol", b: true}, {t: "3 mol", b: false}, {t: "4 mol", b: false}] },
+            { teks: "Sebuah pabrik mereaksikan 5 mol serbuk aluminium (Al) dengan 6 mol gas klorin (Cl₂) untuk membuat aluminium klorida (AlCl₃). Persamaan reaksi setaranya adalah: 2Al(s) + 3Cl₂(g) → 2AlCl₃(s). Karena jumlah bahan tidak ekivalen, akan ada bahan yang bersisa (tidak bereaksi). Berapakah jumlah mol serbuk aluminium (Al) yang tersisa setelah reaksi berhenti?", pilihan: [{t: "1 mol", b: true}, {t: "2 mol", b: false}, {t: "4 mol", b: false}, {t: "5 mol", b: false}] }
+        ];
+
+        let namaSiswa = "";
+        let indeksSoal = 0;
+        let sisaDetik = DURASI_KUIS;
+        let intervalTimer;
+        
+        window.onload = function() {
+            const dataSimpanan = localStorage.getItem(KUNCI_STORAGE);
+            if (dataSimpanan) {
+                const progres = JSON.parse(dataSimpanan);
+                namaSiswa = progres.namaSiswa;
+                indeksSoal = progres.indeksSoal;
+                sisaDetik = progres.sisaDetik;
+                
+                for (let i = 0; i < dataSoal.length; i++) {
+                    dataSoal[i].pilihanAcak = progres.dataSoal[i].pilihanAcak;
+                    dataSoal[i].jawabanDipilih = progres.dataSoal[i].jawabanDipilih;
+                }
+
+                document.getElementById("pesan-resume").style.display = "block";
+                setTimeout(() => {
+                    document.getElementById("layar-awal").style.display = "none";
+                    document.getElementById("layar-kuis").style.display = "block";
+                    jalankanTimer();
+                    renderNavigasi();
+                    muatSoal(indeksSoal);
+                }, 1000);
+            } else {
+                dataSoal.forEach(soal => {
+                    soal.pilihanAcak = acakArray(soal.pilihan); 
+                    soal.jawabanDipilih = null; 
+                });
+            }
+        };
+
+        function simpanProgres() {
+            const progres = {
+                namaSiswa: namaSiswa,
+                indeksSoal: indeksSoal,
+                sisaDetik: sisaDetik,
+                dataSoal: dataSoal
+            };
+            localStorage.setItem(KUNCI_STORAGE, JSON.stringify(progres));
+        }
+
+        function mulaiKuis() {
+            namaSiswa = document.getElementById("input-nama").value.trim();
+            if (!namaSiswa) return alert("Silakan isi nama Anda!");
+
+            document.getElementById("layar-awal").style.display = "none";
+            document.getElementById("layar-kuis").style.display = "block";
+
+            simpanProgres();
+            jalankanTimer();
+            renderNavigasi();
+            muatSoal(0);
+        }
+
+        function jalankanTimer() {
+            intervalTimer = setInterval(() => {
+                sisaDetik--;
+                let menit = Math.floor(sisaDetik / 60);
+                let detik = sisaDetik % 60;
+                document.getElementById("timer-angka").innerText = 
+                    (menit < 10 ? "0" : "") + menit + ":" + (detik < 10 ? "0" : "") + detik;
+
+                if (sisaDetik % 5 === 0) simpanProgres();
+
+                if (sisaDetik <= 0) {
+                    clearInterval(intervalTimer);
+                    alert("Waktu Habis! Latihan otomatis dikumpulkan.");
+                    prosesSelesai();
+                }
+            }, 1000);
+        }
+
+        function renderNavigasi() {
+            const wadah = document.getElementById("wadah-navigasi");
+            wadah.innerHTML = "";
+            dataSoal.forEach((soal, i) => {
+                const btn = document.createElement("div");
+                btn.className = "btn-nav-soal";
+                if (soal.jawabanDipilih) btn.classList.add("dijawab");
+                if (i === indeksSoal) btn.classList.add("aktif");
+                btn.innerText = i + 1;
+                btn.onclick = () => muatSoal(i);
+                wadah.appendChild(btn);
+            });
+        }
+
+        function muatSoal(indeksBaru) {
+            indeksSoal = indeksBaru;
+            const soal = dataSoal[indeksSoal];
+            
+            document.getElementById("soal-judul").innerText = `Soal ${indeksSoal + 1}`;
+            document.getElementById("soal-teks").innerHTML = soal.teks.replace(/\n/g, '<br>');
+
+            const wadahJawaban = document.getElementById("wadah-jawaban");
+            wadahJawaban.innerHTML = "";
+            const daftarWarna = ["warna-merah", "warna-kuning", "warna-hijau", "warna-biru"];
+
+            soal.pilihanAcak.forEach((pilihan, idx) => {
+                const div = document.createElement("div");
+                div.className = `kotak-jawaban ${daftarWarna[idx]}`;
+                if (soal.jawabanDipilih === pilihan.t) div.classList.add("terpilih");
+                
+                div.innerText = pilihan.t;
+                div.onclick = () => pilihJawaban(pilihan.t);
+                wadahJawaban.appendChild(div);
+            });
+
+            document.getElementById("btn-prev").style.visibility = (indeksSoal === 0) ? "hidden" : "visible";
+            document.getElementById("btn-next").style.visibility = (indeksSoal === dataSoal.length - 1) ? "hidden" : "visible";
+            
+            simpanProgres(); 
+            renderNavigasi(); 
+        }
+
+        function pilihJawaban(teksPilihan) {
+            dataSoal[indeksSoal].jawabanDipilih = teksPilihan;
+            simpanProgres(); 
+            muatSoal(indeksSoal); 
+        }
+
+        function navigasiSoal(arah) {
+            let indeksBaru = indeksSoal + arah;
+            if (indeksBaru >= 0 && indeksBaru < dataSoal.length) muatSoal(indeksBaru);
+        }
+
+        function bukaModalKonfirmasi() {
+            document.getElementById("modal-konfirmasi").style.display = "flex";
+        }
+
+        function tutupModal() {
+            document.getElementById("modal-konfirmasi").style.display = "none";
+        }
+
+        function prosesSelesai() {
+            clearInterval(intervalTimer);
+            tutupModal();
+            document.getElementById("layar-kuis").style.display = "none";
+            document.getElementById("layar-penutup").style.display = "block";
+
+            let waktuPakai = DURASI_KUIS - sisaDetik;
+            let skorBiner = [];
+            let totalBenar = 0;
+
+            dataSoal.forEach(soal => {
+                let isBenar = soal.pilihanAcak.some(p => p.t === soal.jawabanDipilih && p.b === true);
+                if (isBenar) totalBenar++;
+                skorBiner.push(isBenar ? 1 : 0);
+            });
+
+            let persentase = (totalBenar / dataSoal.length) * 100;
+            let token = Math.random().toString(36).substring(2, 7).toUpperCase().padEnd(5, '0');
+            let timestamp = new Date().toLocaleString('id-ID');
+
+            // Pengiriman data disesuaikan khusus untuk 5 soal
+            const paketData = {
+                waktuKirim: timestamp, nama: namaSiswa, token: token, 
+                waktuPengerjaan: waktuPakai + " dtk", skorPersen: persentase + "%",
+                q1: skorBiner[0], q2: skorBiner[1], q3: skorBiner[2], q4: skorBiner[3], q5: skorBiner[4]
+            };
+
+            fetch(urlGAS, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(paketData)
+            })
+            .then(() => {
+                localStorage.removeItem(KUNCI_STORAGE); 
+                tampilkanSertifikat(persentase, waktuPakai, token, timestamp, true);
+            })
+            .catch(() => {
+                tampilkanSertifikat(persentase, waktuPakai, token, timestamp, false);
+            });
+        }
+
+        function tampilkanSertifikat(skor, waktu, token, ts, sukses) {
+            document.getElementById("teks-status-akhir").innerText = sukses ? "Kuis Selesai!" : "Gagal Kirim ke Server!";
+            if (!sukses) document.getElementById("teks-status-akhir").style.color = "red";
+
+            document.getElementById("teks-skor").innerText = skor + "%";
+            document.getElementById("teks-skor").style.display = "block";
+            document.getElementById("teks-info-tambahan").innerText = `Selesai dikerjakan dalam ${Math.floor(waktu/60)} menit ${waktu%60} detik.`;
+
+            document.getElementById("tampil-nama-siswa").innerText = namaSiswa;
+            document.getElementById("teks-token-tampil").innerText = token;
+            document.getElementById("tampil-timestamp").innerText = ts;
+            
+            document.getElementById("wadah-bukti").style.display = "block";
+            document.getElementById("pesan-screenshot").style.display = "block";
+        }
+
+        function acakArray(array) {
+            let arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+    </script>
+</body>
+</html>
